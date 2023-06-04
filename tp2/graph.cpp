@@ -1,11 +1,10 @@
 #include "graph.hpp"
 #include <iostream>
-#include <string>
-#include <map>
 #include <iomanip>
+#include <queue>
 
 #define TAM_TEXT 25
-#define TAM_NUM 3
+#define TAM_NUM 5
 
 using namespace std;
 
@@ -13,7 +12,8 @@ using namespace std;
 APAGAR
 //--------------------------------------------------------------------/*/
 void Graph::ImprimeMatriz(){
-    cout << "[u\\j]";
+    //cout << "[JOBS \\ USERS]" << endl;
+    cout << " " << setw(TAM_NUM) << " ";
     
     for (int j = 0; j < this->_matriz_M; j++) {
         cout << "[" << right << setw(TAM_NUM - 1) << j << "]";
@@ -24,7 +24,7 @@ void Graph::ImprimeMatriz(){
     for (int i = 0; i < this->_matriz_N; i++) {
         cout << "[" << right << setw(TAM_NUM - 1) << i << "]";
         for (int j = 0; j < this->_matriz_M; j++) {
-            if(this->_matriz[i][j] == 0) {
+            if(this->_matriz[i][j] == -1) {
             cout << right << setw(TAM_NUM) << "_" << " ";
             } else {
                 cout << right << setw(TAM_NUM) << this->_matriz[i][j] << " ";
@@ -40,7 +40,7 @@ APAGAR
 void Graph::ImprimeUsersMap(){
     cout << "--- USERS (" << this->_users.size() << ") ---" << endl;
     for (auto& x: this->_users){
-        cout << left << setw(TAM_TEXT) << x.first << ':' << right << setw(TAM_NUM) << x.second << endl;
+        cout << right << setw(TAM_NUM) << x.second << " : " << left << setw(TAM_TEXT) << x.first << endl;
     }
 }
 
@@ -50,16 +50,28 @@ APAGAR
 void Graph::ImprimeJobsMap(){
     cout << "--- JOBS (" << this->_jobs.size() << ") ---" << endl;
     for (auto& x: this->_jobs){
-        cout << left << setw(TAM_TEXT) << x.first << ':' << right << setw(TAM_NUM) << x.second << endl;
+        cout << right << setw(TAM_NUM) << x.second << " : " << left << setw(TAM_TEXT) << x.first << endl;
     }
 }
 
 
 /*/--------------------------------------------------------------------//
+//---------------------------------------------------------------------//
+//---------------------------------------------------------------------//
+//---------------------------------------------------------------------//
+//---------------------------------------------------------------------//
+//---------------------------------------------------------------------//
+//---------------------------------------------------------------------//
+//--------------------------------------------------------------------/*/
+
+
+
+
+/*/--------------------------------------------------------------------//
 //--------------------------------------------------------------------/*/
 Graph::Graph(int n_users, int n_jobs) {
-    this->_matriz_N = n_users;
-    this->_matriz_M = n_jobs;
+    this->_matriz_N = n_jobs;
+    this->_matriz_M = n_users;
     this->_matriz = this->InicializaMatriz();
 
     this->_id_prox_user = 0;
@@ -85,178 +97,58 @@ int** Graph::InicializaMatriz() {
 
 /*/--------------------------------------------------------------------//
 //--------------------------------------------------------------------/*/
-bool Graph::AdicionaNoMap(map<string, int> map, string s, int i){
-    
-    if(map.find(s) == map.end()){
+bool Graph::ProcuraEAdicionaNoMap(map<string, int>& map, string s, int i, int& aux){
+
+    std::map<string,int>::iterator it; 
+    it = map.find(s);
+
+    if(it == map.end()){
         map.emplace(s, i);
+        aux = i;
         return true;
+    } else{
+        aux = it->second;
+        return false;
     }
 
-    return false;
 }
 
 /*/--------------------------------------------------------------------//
 //--------------------------------------------------------------------/*/
 void Graph::AdicionaAresta(string u, string j){
 
-    if(AdicionaNoMap(this->_users, u, this->_id_prox_job)){
+    int aux_u = -1;
+    int aux_j = -1;
+    
+
+    if(ProcuraEAdicionaNoMap(this->_users, u, this->_id_prox_user, aux_u)){
+        this->_id_prox_user++;
+    }
+
+    if(ProcuraEAdicionaNoMap(this->_jobs, j, this->_id_prox_job, aux_j)){
         this->_id_prox_job++;
     }
 
-
-    /*
-    this->_matriz[u][j] = 1;
-    this->_matriz[j][u] = 1;
-    */
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/*/--------------------------------------------------------------------//
-> Executa Dijkstra
-> vector<pair<int, int>> é usado para armazenar sempre as seguintes infos do vertice: id + distancia até a origem 
-> "explorados" contém vértices para os quais já se sabe o menor caminho
-> "fronteira" contém os vértices que podem ser alcançados a partir de vértices já explorados
-//--------------------------------------------------------------------/*/
-int Graph::EncontraCaminhoMaisCurto(){
-    int destino = (this->_n_vert) - 1;
-    vector<pair<int, int>> explorados;
-    vector<pair<int, int>> fronteira;
-
-    pair<int, int> vert_atual = make_pair(0, 0);
-
-
-    this->ExpandeFronteira(vert_atual, explorados, fronteira);
-    explorados.emplace_back(vert_atual);
-    
-    do{
-        vert_atual = CaminhaNaFronteira(fronteira);
-        this->ExpandeFronteira(vert_atual, explorados, fronteira);
-        explorados.emplace_back(vert_atual);
-        this->RemoveDaFronteiraPorId(fronteira, vert_atual.first);
-
-    } while((fronteira.size() > 0) && vert_atual.first != destino);
-
-    if (vert_atual.first == destino){
-        return vert_atual.second;
-    } else {
-        return -1;
-    }
-}
-
-/*/--------------------------------------------------------------------//
-> Natualmente, o mesmo vértice pode ser enviado para a fronteira duas vezes, no entanto, se isso ocorrer a função vai garantir que a distancia guardada na fronteira é a menor possível
-//--------------------------------------------------------------------/*/
-void Graph::AdicionaEmFronteira(vector<pair<int, int>>& fronteira, int id, int d){
-    bool add_nova = true;
-
-    for (int i = 0; i < (int)fronteira.size(); i++){        
-        if(fronteira[i].first == id){
-            add_nova = false;
-
-            if(fronteira[i].second > d){
-                fronteira[i].second = d;
-            }
-        }
-    }
-    
-    if (add_nova){
-        fronteira.emplace_back(make_pair(id, d));
-    }
+    this->_matriz[aux_j][aux_u] = 1;
 }
 
 /*/--------------------------------------------------------------------//
 //--------------------------------------------------------------------/*/
-void Graph::RemoveDaFronteiraPorId(vector<pair<int, int>>& fronteira, int id){
-    for (int i = 0; i < (int)fronteira.size(); i++){
-        if(fronteira[i].first == id){
-            fronteira.erase(fronteira.begin() + i);
-        }
-    }
-}
+int Graph::AlgoritmoGuloso(){
 
 
-
-/*/--------------------------------------------------------------------//
-//--------------------------------------------------------------------/*/
-void Graph::ExpandeFronteira(pair<int, int> vert_atual, vector<pair<int, int>>& explorados, vector<pair<int, int>>& fronteira){
-    int id_atual = vert_atual.first;
-    int d_atual = vert_atual.second;
-
-    for (int j = 0; j < this->_n_matriz; j++){
-        if (this->_matriz[id_atual][j] >= 0){
-            if(!VerificaSeExplorado(j, explorados)){
-                this->_matriz[id_atual][j] += d_atual;
-                this->AdicionaEmFronteira(fronteira, j, this->_matriz[id_atual][j]);
-            }
-        }
-    }
-
+    if(this->_jobs.size() < this->_users.size())
+        return this->_jobs.size();
+    else
+        return this->_users.size();
 }
 
 /*/--------------------------------------------------------------------//
 //--------------------------------------------------------------------/*/
-bool Graph::VerificaSeExplorado(int vert, vector<pair<int, int>>& explorados){
-    for (int i = 0; i < (int)explorados.size(); i++){
-        if(explorados[i].first == vert){
-            return true;
-        }
-    }
+int Graph::AlgoritmoExato(){
 
-    return false;
+    if(this->_jobs.size() < this->_users.size())
+        return this->_jobs.size();
+    else
+        return this->_users.size();
 }
-
-/*/--------------------------------------------------------------------//
-//--------------------------------------------------------------------/*/
-pair<int, int> Graph::CaminhaNaFronteira(vector<pair<int, int>>& fronteira){
-    int aux_id = fronteira[0].first;
-    int aux_d_min = fronteira[0].second;
-
-    for (int i = 0; i < (int)fronteira.size(); i++){
-        if(fronteira[i].second < aux_d_min){
-
-            aux_id = fronteira[i].first;
-            aux_d_min = fronteira[i].second;
-        }
-    }
-
-    return make_pair(aux_id, aux_d_min);
-}
-
