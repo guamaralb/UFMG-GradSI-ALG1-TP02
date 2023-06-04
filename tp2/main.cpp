@@ -2,7 +2,6 @@
 #include <string>
 
 #include "graph.hpp"
-#include "gpt.hpp"
 
 #define INF 0x3f3f3f3f
 
@@ -28,6 +27,6 @@ int main(int argc, char const *argv[]) {
     Grafo.ImprimeUsersMap();
     Grafo.ImprimeJobsMap();
 
-    cout << Grafo.AlgoritmoGuloso() << endl;
+    //cout << Grafo.AlgoritmoGuloso() << endl;
     cout << Grafo.AlgoritmoExato() << endl;    
 }

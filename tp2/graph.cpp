@@ -134,6 +134,13 @@ void Graph::AdicionaAresta(string u, string j){
 
 /*/--------------------------------------------------------------------//
 //--------------------------------------------------------------------/*/
+void Graph::BFS(int n, int m){
+    cout << n << " - " << m << endl;
+    
+}
+
+/*/--------------------------------------------------------------------//
+//--------------------------------------------------------------------/*/
 int Graph::AlgoritmoGuloso(){
 
 
@@ -147,8 +154,20 @@ int Graph::AlgoritmoGuloso(){
 //--------------------------------------------------------------------/*/
 int Graph::AlgoritmoExato(){
 
+    this->BFS(0, 0);
+    /*
+    for(int i = 0; i < this->_matriz_N; i++){
+        for(int j = 0; j < this->_matriz_M; j++){
+            if(this->_matriz[i][j] == 1){
+                this->BFS(i, j);
+            }
+        }
+    }
+    */
+
     if(this->_jobs.size() < this->_users.size())
         return this->_jobs.size();
     else
         return this->_users.size();
 }
+

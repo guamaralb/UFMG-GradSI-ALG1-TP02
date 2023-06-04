@@ -22,6 +22,8 @@ class Graph {
         int** InicializaMatriz();
         bool ProcuraEAdicionaNoMap(map<string, int>& map, string s, int i, int& aux);
 
+        void BFS(int n, int m);
+
         int** _matriz;
         int _matriz_N;
         int _matriz_M;
