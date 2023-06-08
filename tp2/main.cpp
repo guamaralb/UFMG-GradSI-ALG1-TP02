@@ -2,6 +2,7 @@
 #include <string>
 
 #include "graph.hpp"
+#include "graph.hpp"
 
 #define INF 0x3f3f3f3f
 
@@ -23,10 +24,7 @@ int main(int argc, char const *argv[]) {
         Grafo.AdicionaAresta(nomeU, nomeJ);
     }
 
-    Grafo.ImprimeMatriz();
-    Grafo.ImprimeUsersMap();
-    Grafo.ImprimeJobsMap();
-
     //cout << Grafo.AlgoritmoGuloso() << endl;
     cout << Grafo.AlgoritmoExato() << endl;    
+    //cout << Grafo.AlgoritmoExato() << endl;    
 }

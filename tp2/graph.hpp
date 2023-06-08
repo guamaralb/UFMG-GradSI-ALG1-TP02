@@ -3,6 +3,7 @@
 
 #include <string>
 #include <map>
+#include <vector>
 
 using namespace std;
 
@@ -10,10 +11,10 @@ class Graph {
     public:
         Graph(int n_users, int n_jobs);
         void AdicionaAresta(string u, string j);
-        int AlgoritmoGuloso();
         int AlgoritmoExato();
 
-        void ImprimeMatriz();
+
+        void ImprimeMatriz(int** matriz);
         void ImprimeUsersMap();
         void ImprimeJobsMap();
 
@@ -22,11 +23,13 @@ class Graph {
         int** InicializaMatriz();
         bool ProcuraEAdicionaNoMap(map<string, int>& map, string s, int i, int& aux);
 
-        void BFS(int n, int m);
+        bool BuscaJob(int u, int* jobsExplorados, int* jobsAlocados);
 
         int** _matriz;
-        int _matriz_N;
-        int _matriz_M;
+        int _matriz_N_J;
+        int _matriz_M_U;
+
+        int* _usersEmCadaJob;
 
         map<string, int> _users;
         int _id_prox_user;

@@ -11,23 +11,23 @@ using namespace std;
 /*/--------------------------------------------------------------------//
 APAGAR
 //--------------------------------------------------------------------/*/
-void Graph::ImprimeMatriz(){
-    //cout << "[JOBS \\ USERS]" << endl;
+void Graph::ImprimeMatriz(int** matriz){
+    cout << "[USERS \\ JOBS]" << endl;
     cout << " " << setw(TAM_NUM) << " ";
     
-    for (int j = 0; j < this->_matriz_M; j++) {
+    for (int j = 0; j < this->_matriz_N_J; j++) {
         cout << "[" << right << setw(TAM_NUM - 1) << j << "]";
     }
     
     cout << endl;
 
-    for (int i = 0; i < this->_matriz_N; i++) {
+    for (int i = 0; i < this->_matriz_M_U; i++) {
         cout << "[" << right << setw(TAM_NUM - 1) << i << "]";
-        for (int j = 0; j < this->_matriz_M; j++) {
-            if(this->_matriz[i][j] == -1) {
+        for (int j = 0; j < this->_matriz_N_J; j++) {
+            if(matriz[i][j] == 0) {
             cout << right << setw(TAM_NUM) << "_" << " ";
             } else {
-                cout << right << setw(TAM_NUM) << this->_matriz[i][j] << " ";
+                cout << right << setw(TAM_NUM) << matriz[i][j] << " ";
             }
         }
         cout << endl;
@@ -70,12 +70,16 @@ void Graph::ImprimeJobsMap(){
 /*/--------------------------------------------------------------------//
 //--------------------------------------------------------------------/*/
 Graph::Graph(int n_users, int n_jobs) {
-    this->_matriz_N = n_jobs;
-    this->_matriz_M = n_users;
+    this->_matriz_M_U = n_users;
+    this->_matriz_N_J = n_jobs;
     this->_matriz = this->InicializaMatriz();
 
     this->_id_prox_user = 0;
     this->_id_prox_job = 0;
+
+    for (int i = 0; i < this->_matriz_N_J; i++){
+        this->_usersEmCadaJob[i] = -1;
+    }
 
 }
 
@@ -83,12 +87,14 @@ Graph::Graph(int n_users, int n_jobs) {
 //--------------------------------------------------------------------/*/
 int** Graph::InicializaMatriz() {
 
-    int** grafo_matriz = new int* [this->_matriz_N];
+    int** grafo_matriz = new int* [this->_matriz_M_U];
     
-    for (int i = 0; i < _matriz_N; i++){
-        grafo_matriz[i] = new int[this->_matriz_M];
-        for (int j = 0; j < _matriz_M; j++) {
-            grafo_matriz[i][j] = -1;
+    for (int i = 0; i < _matriz_M_U; i++){
+
+        grafo_matriz[i] = new int[this->_matriz_N_J];
+        for (int j = 0; j < _matriz_N_J; j++) {
+            
+            grafo_matriz[i][j] = 0;
         }
     }
 
@@ -129,45 +135,121 @@ void Graph::AdicionaAresta(string u, string j){
         this->_id_prox_job++;
     }
 
-    this->_matriz[aux_j][aux_u] = 1;
+    this->_matriz[aux_u][aux_j] = 1;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /*/--------------------------------------------------------------------//
 //--------------------------------------------------------------------/*/
-void Graph::BFS(int n, int m){
-    cout << n << " - " << m << endl;
+bool Graph::BuscaJob(int u, int* jobsExplorados, int* jobsAlocados){
+
+    // Dado o USER u, vamos iterarar na matriz por todos os JOBS j
+    for (int j = 0; j < this->_matriz_N_J; j++){
+        
+        // USER tem interesse no JOB
+        if (this->_matriz[u][j] == 1){
+
+            // USER ainda não explorou o JOB j
+            if(jobsExplorados[j] == 0){
+                jobsExplorados[j] = 1;
+
+                int atual_user_alocado = jobsAlocados[j];
     
+                // Não há nenhum USER alocado para o JOB j
+                if (atual_user_alocado == -1){
+                    jobsAlocados[j] = u;
+                    return true;
+
+                // Chama a 'BuscaJob' para o atual USER alocado para o JOB e vê se é possível alocá-lo em outro JOB
+                } else if(BuscaJob(atual_user_alocado, jobsExplorados, jobsAlocados)){
+                    jobsAlocados[j] = u;
+                    return true;
+                }
+
+            }
+        }
+    }
+    return false;
 }
-
-/*/--------------------------------------------------------------------//
-//--------------------------------------------------------------------/*/
-int Graph::AlgoritmoGuloso(){
-
-
-    if(this->_jobs.size() < this->_users.size())
-        return this->_jobs.size();
-    else
-        return this->_users.size();
-}
-
 /*/--------------------------------------------------------------------//
 //--------------------------------------------------------------------/*/
 int Graph::AlgoritmoExato(){
 
-    this->BFS(0, 0);
-    /*
-    for(int i = 0; i < this->_matriz_N; i++){
-        for(int j = 0; j < this->_matriz_M; j++){
-            if(this->_matriz[i][j] == 1){
-                this->BFS(i, j);
-            }
+    // Cria e inicializa uma array para guardar qual JOB está com qual USER agora
+    int jobsAlocados[this->_matriz_N_J];
+    for (int i = 0; i < this->_matriz_N_J; i++){
+        jobsAlocados[i] = -1;
+    }
+
+    // Itera por todos os USERS, buscando um JOB para alocá-los
+    for (int u = 0; u < this->_matriz_M_U; u++){
+        int jobsExplorados[this->_matriz_N_J];
+        for (int i = 0; i < this->_matriz_N_J; i++){
+            jobsExplorados[i] = 0;
+        }
+ 
+        BuscaJob(u, jobsExplorados, jobsAlocados);
+    }
+
+    // Perpassa por toda a array de 'jobsAlocados' e verifica quantos JOBS de fato foram associados a algum USER.
+    int alocs_totais = 0;
+    for (int i = 0; i < this->_matriz_N_J; i++){
+        if (jobsAlocados[i] != -1){
+            alocs_totais++;
         }
     }
-    */
 
-    if(this->_jobs.size() < this->_users.size())
-        return this->_jobs.size();
-    else
-        return this->_users.size();
+    return alocs_totais;
 }
-
