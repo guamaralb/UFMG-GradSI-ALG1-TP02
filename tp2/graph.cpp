@@ -77,10 +77,11 @@ Graph::Graph(int n_users, int n_jobs) {
     this->_id_prox_user = 0;
     this->_id_prox_job = 0;
 
+
+    this->_usersEmCadaJob = new int[_matriz_N_J];
     for (int i = 0; i < this->_matriz_N_J; i++){
         this->_usersEmCadaJob[i] = -1;
     }
-
 }
 
 /*/--------------------------------------------------------------------//
@@ -99,6 +100,19 @@ int** Graph::InicializaMatriz() {
     }
 
     return grafo_matriz;
+}
+
+/*/--------------------------------------------------------------------//
+//--------------------------------------------------------------------/*/
+int* Graph::InicializaVetorN() {
+
+    int* vetor = new int [this->_matriz_N_J];
+    
+    for (int i = 0; i < this->_matriz_N_J; i++){
+        vetor[i] = -1;
+    }
+
+    return vetor;
 }
 
 /*/--------------------------------------------------------------------//
@@ -193,7 +207,7 @@ void Graph::AdicionaAresta(string u, string j){
 
 /*/--------------------------------------------------------------------//
 //--------------------------------------------------------------------/*/
-bool Graph::BuscaJob(int u, int* jobsExplorados, int* jobsAlocados){
+bool Graph::EncontraJobDisponivel(int u, int* jobsExplorados){
 
     // Dado o USER u, vamos iterarar na matriz por todos os JOBS j
     for (int j = 0; j < this->_matriz_N_J; j++){
@@ -205,16 +219,20 @@ bool Graph::BuscaJob(int u, int* jobsExplorados, int* jobsAlocados){
             if(jobsExplorados[j] == 0){
                 jobsExplorados[j] = 1;
 
-                int atual_user_alocado = jobsAlocados[j];
+                int atual_user_alocado = this->_usersEmCadaJob[j];
     
                 // Não há nenhum USER alocado para o JOB j
+                // - Nesse caso, o atual USER é automaticamente alocado no JOB j
                 if (atual_user_alocado == -1){
-                    jobsAlocados[j] = u;
+                    this->_usersEmCadaJob[j] = u;
                     return true;
 
-                // Chama a 'BuscaJob' para o atual USER alocado para o JOB e vê se é possível alocá-lo em outro JOB
-                } else if(BuscaJob(atual_user_alocado, jobsExplorados, jobsAlocados)){
-                    jobsAlocados[j] = u;
+                // Chama a 'EncontraJobDisponivel' para o atual USER alocado para o JOB e vê se é possível alocá-lo em outro JOB
+                // - Nesse caso, a chamada recursiva funciona verificando se o USER que atualmente ocupa a vaga que
+                //   o USER u "deseja" pode ser alocado em outro JOB. Caso esse outro USER somente possa ocupar uma
+                //   vaga já ocupada por um terceiro USER, então a função é chamada mais uma vez, e assim sucessivamente.
+                } else if(EncontraJobDisponivel(atual_user_alocado, jobsExplorados)){
+                    this->_usersEmCadaJob[j] = u;
                     return true;
                 }
 
@@ -227,11 +245,7 @@ bool Graph::BuscaJob(int u, int* jobsExplorados, int* jobsAlocados){
 //--------------------------------------------------------------------/*/
 int Graph::AlgoritmoExato(){
 
-    // Cria e inicializa uma array para guardar qual JOB está com qual USER agora
-    int jobsAlocados[this->_matriz_N_J];
-    for (int i = 0; i < this->_matriz_N_J; i++){
-        jobsAlocados[i] = -1;
-    }
+    this->_usersEmCadaJob = this->InicializaVetorN();
 
     // Itera por todos os USERS, buscando um JOB para alocá-los
     for (int u = 0; u < this->_matriz_M_U; u++){
@@ -240,13 +254,13 @@ int Graph::AlgoritmoExato(){
             jobsExplorados[i] = 0;
         }
  
-        BuscaJob(u, jobsExplorados, jobsAlocados);
+        EncontraJobDisponivel(u, jobsExplorados);
     }
 
     // Perpassa por toda a array de 'jobsAlocados' e verifica quantos JOBS de fato foram associados a algum USER.
     int alocs_totais = 0;
     for (int i = 0; i < this->_matriz_N_J; i++){
-        if (jobsAlocados[i] != -1){
+        if (this->_usersEmCadaJob[i] != -1){
             alocs_totais++;
         }
     }

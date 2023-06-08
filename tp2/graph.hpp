@@ -21,9 +21,10 @@ class Graph {
 
     private:
         int** InicializaMatriz();
+        int* InicializaVetorN();
         bool ProcuraEAdicionaNoMap(map<string, int>& map, string s, int i, int& aux);
 
-        bool BuscaJob(int u, int* jobsExplorados, int* jobsAlocados);
+        bool EncontraJobDisponivel(int u, int* jobsExplorados);
 
         int** _matriz;
         int _matriz_N_J;
