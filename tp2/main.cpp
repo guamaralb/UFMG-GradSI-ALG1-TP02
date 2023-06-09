@@ -24,7 +24,6 @@ int main(int argc, char const *argv[]) {
         Grafo.AdicionaAresta(nomeU, nomeJ);
     }
 
-    //cout << Grafo.AlgoritmoGuloso() << endl;
-    cout << Grafo.AlgoritmoExato() << endl;    
-    //cout << Grafo.AlgoritmoExato() << endl;    
+    cout << "Guloso: " << Grafo.AlgoritmoGuloso() << endl;    
+    cout << "Exato: " << Grafo.AlgoritmoExato() << endl;    
 }
